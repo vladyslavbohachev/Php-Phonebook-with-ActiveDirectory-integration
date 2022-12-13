@@ -39,10 +39,13 @@ Download this code, extract the code and copy it in to the webfolder the standar
 ### Option 2:
 Windows IIS Server
 How to install IIS: https://cloudzy.com/knowledge-base/install-iis-on-windows-10/
+
 Install the following tool: https://www.microsoft.com/en-us/download/details.aspx?id=43717
+
   > From this tool install php
   
  in the PhP controlpannel activate
+ 
   > php_ldap
   
  Create a site and copy this files inside.

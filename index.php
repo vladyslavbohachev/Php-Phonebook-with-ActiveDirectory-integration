@@ -1,34 +1,37 @@
 <?php
 error_reporting(0);
+// connect to Active Directory
 $ldap_server = "ldap://IP";
-$auth_user = "ADUSER";
-$auth_pass = "ADBENUTZERPASSWORD";
+$auth_user = "USER";
+$auth_pass = "PASSWORD";
 if (!($connect=@ldap_connect($ldap_server))) {
-    die("Keine Verbindung zur Active Directory möglich!");
+    die("Could not connect to LDAP server.");
 }
+// bind to Active Directory
 ldap_set_option($connect, LDAP_OPT_PROTOCOL_VERSION, 3);
 ldap_set_option($connect, LDAP_OPT_REFERRALS, 0);
 if (!($bind=@ldap_bind($connect, $auth_user, $auth_pass))) {
-    die("Bind fehlgeschlagen!");
+    die("Could not bind to LDAP server.");
 }
+// search Active Directory
 $base_dn = "OU=users,DC=,DC=";
 $filter = "(&(|(objectClass=contact)(objectClass=user))(givenName=*)(!(useraccountcontrol:1.2.840.113556.1.4.803:=2))(!(userAccountControl:1.2.840.113556.1.4.803:=2))(!(mail=test@testmail.com)))";
 if (!($search=@ldap_search($connect,$base_dn,$filter))) {
-    die("search error");
+    die("Could not search LDAP server.");
 }
-$anzahl = ldap_count_entries($connect,$search);
+$count = ldap_count_entries($connect,$search);
 $info = ldap_get_entries($connect, $search);
-for ($i=0; $i<$anzahl; $i++) {
-    $ergebnis[$i]["sid"]                = $info[$i]["sid"][0];
-    $ergebnis[$i]["sn"]                 = $info[$i]["sn"][0];
-    $ergebnis[$i]["givenname"]          = $info[$i]["givenname"][0];
-    $ergebnis[$i]["mail"]               = $info[$i]["mail"][0];
-    $ergebnis[$i]["telephonenumber"]    = $info[$i]["telephonenumber"][0];
-    $ergebnis[$i]["ipphone"]            = $info[$i]["ipphone"][0]; 
-    $ergebnis[$i]["mobile"]             = $info[$i]["mobile"][0];
-    $ergebnis[$i]["department"]         = $info[$i]["department"][0];
+for ($i=0; $i<$count; $i++) {
+    $ldap_entries[$i]["sid"]                = $info[$i]["sid"][0];
+    $ldap_entries[$i]["sn"]                 = $info[$i]["sn"][0];
+    $ldap_entries[$i]["givenname"]          = $info[$i]["givenname"][0];
+    $ldap_entries[$i]["mail"]               = $info[$i]["mail"][0];
+    $ldap_entries[$i]["telephonenumber"]    = $info[$i]["telephonenumber"][0];
+    $ldap_entries[$i]["ipphone"]            = $info[$i]["ipphone"][0]; 
+    $ldap_entries[$i]["mobile"]             = $info[$i]["mobile"][0];
+    $ldap_entries[$i]["department"]         = $info[$i]["department"][0];
 }
-usort($ergebnis, 'vergleich'); 
+usort($ldap_entries, 'sortuser'); 
 ?>
 <!DOCTYPE html>
 <html>
@@ -56,36 +59,35 @@ usort($ergebnis, 'vergleich');
 </head>
 <body>
      <br/>
-     <p align="center"><?php echo "$anzahl" ?> Kontakte</p>
-     <?php //include('rain/rain.php'); //include('xmas/xmas.php'); ?>
+     <p align="center"><?php echo "$count" ?> Contacts</p>
      <table size="80%" id="employee_table" class="order-table table styled-table">
           <thead>
                <tr>
-                   <th role="columnheader">Nachnamen</th>
-                   <th role="columnheader">Vorname</th>
+                   <th role="columnheader">Lastname</th>
+                   <th role="columnheader">Firstname</th>
                    <th role="columnheader">E-Mail</th>
-                   <th role="columnheader">Telefon</th>
-                   <th role="columnheader">Durchwahl</th>
-                   <th role="columnheader">Mobiltelefon</th>
-                   <th role="columnheader">Abteilung</th>
+                   <th role="columnheader">Phone</th>
+                   <th role="columnheader">Dialing</th>
+                   <th role="columnheader">Cell</th>
+                   <th role="columnheader">Department</th>
                </tr>
           </thead>
           <tbody>
-               <?php for ($i = 1; $i < $anzahl; $i++) { $j = 1; ?>
+               <?php for ($i = 1; $i < $count; $i++) { $j = 1; ?>
                 <tr role="row" id="row" class='clickable-row'> 
-                    <td id="col" role="cell"><?php echo $ergebnis[$i]["sn"];?></td>
-                    <td id="col" role="cell"><?php echo $ergebnis[$i]["givenname"];?></td>
-                    <td id="col" role="cell"><a href="mailto:<?php echo UTF8_decode($ergebnis[$i]["mail"]);?>"><?php echo $ergebnis[$i]["mail"];?></a></td>
-                    <td id="col" role="cell"><a href="callto:<?php echo UTF8_decode($ergebnis[$i]["telephonenumber"]);?>"><?php echo UTF8_decode($ergebnis[$i]["telephonenumber"]);?></a></td>
-                    <td id="col" role="cell"><a href="callto:<?php echo UTF8_decode($ergebnis[$i]["ipphone"]);?>"><?php echo UTF8_decode($ergebnis[$i]["ipphone"]);?></a></td>
-                    <td id="col" role="cell"><a href="callto:<?php echo UTF8_decode($ergebnis[$i]["mobile"]);?>"><?php echo UTF8_decode($ergebnis[$i]["mobile"]);?></a></td>
-                    <td id="col" role="cell"><?php echo $ergebnis[$i]["department"];?></td>
+                    <td id="col" role="cell"><?php echo $ldap_entries[$i]["sn"];?></td>
+                    <td id="col" role="cell"><?php echo $ldap_entries[$i]["givenname"];?></td>
+                    <td id="col" role="cell"><a href="mailto:<?php echo UTF8_decode($ldap_entries[$i]["mail"]);?>"><?php echo $ldap_entries[$i]["mail"];?></a></td>
+                    <td id="col" role="cell"><a href="callto:<?php echo UTF8_decode($ldap_entries[$i]["telephonenumber"]);?>"><?php echo UTF8_decode($ldap_entries[$i]["telephonenumber"]);?></a></td>
+                    <td id="col" role="cell"><a href="callto:<?php echo UTF8_decode($ldap_entries[$i]["ipphone"]);?>"><?php echo UTF8_decode($ldap_entries[$i]["ipphone"]);?></a></td>
+                    <td id="col" role="cell"><a href="callto:<?php echo UTF8_decode($ldap_entries[$i]["mobile"]);?>"><?php echo UTF8_decode($ldap_entries[$i]["mobile"]);?></a></td>
+                    <td id="col" role="cell"><?php echo $ldap_entries[$i]["department"];?></td>
                </tr>
                     <?php } 
-                    function vergleich($wert_a, $wert_b){
-                        // Sortierung der Nachnamen
-                        $a = $wert_a["sn"];
-                        $b = $wert_b["sn"];
+                    function sortuser($mod_a, $mod_b){
+                        // Sort by Lastname
+                        $a = $mod_a["sn"];
+                        $b = $mod_b["sn"];
                         if ($a == $b) {
                             return 0;
                         }
